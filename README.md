@@ -1,130 +1,288 @@
-# Cursor-Restore - Cursor History Rescue Mission
+# Cursor Restore 🔄
 
-## 😱 The Problem: When Cursor Goes Rogue
+Recover deleted files from Cursor's backup history on macOS. When Cursor accidentally deletes your project, this tool extracts file backups from Cursor's History folder and SQLite databases.
 
-Picture this: You're happily coding away, making beautiful progress on your project, when suddenly... **POOF!** 💥 
-
-Cursor decides to have a digital tantrum and **deletes your entire directory**. All your precious code, documentation, and that brilliant algorithm you spent 3 hours perfecting at 2 AM? Gone. Vanished. Disappeared into the digital void like your motivation after a failed deployment on Friday afternoon.
-
-You stare at your empty folder in disbelief. Your heart sinks faster than a poorly written sorting algorithm. The five stages of grief hit you like a stack overflow:
-
-1. **Denial**: "This can't be happening. It's just a display bug, right? RIGHT?!"
-2. **Anger**: *Aggressively smashes Ctrl+Z hoping for a miracle*
-3. **Bargaining**: "I promise I'll commit more frequently if you just bring my files back!"
-4. **Depression**: *Contemplates switching careers to farming*
-5. **Acceptance**: "Well, I guess I'll just rewrite everything from memory... 😭"
-
-## 🦸‍♂️ The Hero: Cursor Restore Script
-
-But wait! Before you update your LinkedIn to "Former Developer, Current Digital Archaeologist," there's HOPE! 
-
-Turns out, Cursor has been secretly hoarding your files like a digital packrat in its hidden backup lair (`%APPDATA%\Cursor\User\History`). It's been making sneaky copies of everything you've touched, storing them with cryptic names like a spy agency's filing system.
-
-Our hero script swoops in to:
-- 🕵️ **Decode the Mystery**: Translates Cursor's URL-encoded hieroglyphics back to normal paths
-- 🔍 **Hunt Down Your Files**: Searches through hundreds of backup folders faster than you can say "git blame"
-- ⏰ **Time Travel**: Finds the latest version of each file (because who wants yesterday's bugs?)
-- 🏗️ **Rebuild Your Empire**: Reconstructs your entire directory structure like nothing ever happened
-
-It's like having a time machine, but for code instead of preventing you from buying cryptocurrency in 2010.
-
-## 🎯 The Solution: Digital Phoenix Rising
-
-### Basic Usage
+## Quick Start
 
 ```bash
 # Restore files from the last 7 days (default)
-python cursor_restore.py --restore-path "C:/Users/YourName/Projects/MyProject/"
+python3 cursor_restore_mac.py -r ~/Projects/MyProject/
 
-# Restore to a specific folder
-python cursor_restore.py --restore-path "C:/Users/YourName/Projects/MyProject/" --output-dir "my_restored_files"
-
-# Use custom time range
-python cursor_restore.py --restore-path "C:/Users/YourName/Projects/MyProject/" --start-time "2024-01-01 00:00:00" --end-time "2024-12-31 23:59:59"
-
-# Search back 30 days instead of 7
-python cursor_restore.py --restore-path "C:/Users/YourName/Projects/MyProject/" --days-back 30
-
-# Use custom Cursor history directory (if not using default)
-python cursor_restore.py --history-dir "C:/path/to/cursor/history" --restore-path "C:/Users/YourName/Projects/MyProject/"
-
-# Restore all files from the past year
-python cursor_restore.py --restore-path "C:/Users/YourName/Projects/MyProject/" --days-back 365 --output-dir "recovered_project"
+# Files will be restored to ./restoredFolder/
 ```
 
-### Parameters
+## Installation
 
-- `--history-dir, -d`: Directory containing Cursor history (default: %APPDATA%\Cursor\User\History)
-- `--restore-path, -r`: **Required** - Original directory path to restore
-- `--output-dir, -o`: Output directory for restored files (default: restoredFolder)  
-- `--start-time, -s`: Start timestamp in format "YYYY-MM-DD HH:MM:SS"
-- `--end-time, -e`: End timestamp in format "YYYY-MM-DD HH:MM:SS"
-- `--days-back, -b`: Number of days back to search (default: 7, ignored if --start-time provided)
+```bash
+# Clone the repository
+git clone <repository-url>
+cd Cursor-Restore
 
-### How It Works
+# Make scripts executable
+chmod +x cursor_restore_mac.py cursor_sqlite_explorer.py
 
-1. Scans all folders in the Cursor history directory
-2. Reads each `entries.json` file to find files from your target directory
-3. Filters by timestamp range
-4. For each file, finds the latest version within the time range
-5. Restores files to the output directory maintaining the original folder structure
+# No dependencies required - uses Python 3.6+ standard library
+```
 
-### Path Handling
+## Usage Examples
 
-The script robustly handles various path formats and differences:
+### Restore Files from History
 
-- **URL Encoding**: Automatically decodes URL-encoded paths (e.g., `file:///c%3A/Users/` → `C:/Users/`)
-- **Path Separators**: Works with both forward slashes (`/`) and backslashes (`\`)
-- **Case Sensitivity**: Handles Windows case-insensitive path matching
-- **Protocol Prefixes**: Strips `file://` prefixes from resource URLs
-- **Trailing Slashes**: Normalizes paths with or without trailing slashes
+```bash
+# Basic restore (last 7 days)
+python3 cursor_restore_mac.py -r ~/Projects/MyProject/
 
-This means you can specify your restore path in any of these formats:
-- `C:/Users/YourName/Projects/MyProject/`
-- `C:\Users\YourName\Projects\MyProject`
-- `c:/users/yourname/projects/myproject`
+# Restore from last 30 days
+python3 cursor_restore_mac.py -r ~/Projects/MyProject/ -b 30
 
-### Example Output
+# Custom output directory
+python3 cursor_restore_mac.py -r ~/Projects/MyProject/ -o ~/Desktop/recovered
+
+# Specific date range
+python3 cursor_restore_mac.py -r ~/Projects/MyProject/ \
+  -s "2024-12-01 00:00:00" \
+  -e "2024-12-12 23:59:59"
+
+# Quiet mode (minimal output)
+python3 cursor_restore_mac.py -r ~/Projects/MyProject/ -q
+```
+
+### Workspace Management
+
+```bash
+# List all available workspaces
+python3 cursor_restore_mac.py --list-workspaces
+
+# Example output:
+# Workspace ID: 4cabb0722f5aa8d20b1096a3524eac2e
+#   Path: /Users/name/Projects/MyApp
+#   Database: ~/Library/Application Support/Cursor/User/workspaceStorage/.../state.vscdb
+```
+
+### Extract Code from Chat History
+
+```bash
+# Extract all code from Cursor chat conversations
+python3 cursor_sqlite_explorer.py --extract-code
+
+# Filter by project name
+python3 cursor_sqlite_explorer.py --extract-code --filter "MyProject"
+
+# Custom output directory
+python3 cursor_sqlite_explorer.py --extract-code -o ~/Desktop/chat_code
+
+# Explore a workspace-specific database
+python3 cursor_sqlite_explorer.py \
+  --db ~/Library/Application\ Support/Cursor/User/workspaceStorage/xxx/state.vscdb \
+  --extract-code
+```
+
+### Database Exploration
+
+```bash
+# List all tables in the database
+python3 cursor_sqlite_explorer.py --list-tables
+
+# List all keys (with limit)
+python3 cursor_sqlite_explorer.py --list-keys --limit 50
+
+# Search for specific keys
+python3 cursor_sqlite_explorer.py --search "bubbleId:%"
+
+# Get value for a specific key
+python3 cursor_sqlite_explorer.py --get-value "bubbleId:some-id-here"
+```
+
+## Command Line Options
+
+### cursor_restore_mac.py
+
+| Option | Short | Description | Default |
+|--------|-------|-------------|---------|
+| `--restore-path` | `-r` | **Required** - Directory path to restore | - |
+| `--output-dir` | `-o` | Output directory for restored files | `restoredFolder` |
+| `--days-back` | `-b` | Number of days to search back | `7` |
+| `--start-time` | `-s` | Start timestamp (YYYY-MM-DD HH:MM:SS) | 7 days ago |
+| `--end-time` | `-e` | End timestamp (YYYY-MM-DD HH:MM:SS) | Now |
+| `--list-workspaces` | `-l` | List all workspaces and exit | - |
+| `--quiet` | `-q` | Minimal output | - |
+| `--history-dir` | `-d` | Custom history directory | Auto-detected |
+
+### cursor_sqlite_explorer.py
+
+| Option | Short | Description | Default |
+|--------|-------|-------------|---------|
+| `--extract-code` | `-e` | Extract code from chat conversations | - |
+| `--filter` | `-f` | Filter conversations by text | - |
+| `--output-dir` | `-o` | Output directory | `extracted_code` |
+| `--list-tables` | `-t` | List all database tables | - |
+| `--list-keys` | `-k` | List all keys | - |
+| `--search` | `-s` | Search keys (SQL LIKE pattern) | - |
+| `--get-value` | `-g` | Get value for specific key | - |
+| `--db` | `-d` | Custom database path | Global state.vscdb |
+| `--limit` | `-l` | Limit number of results | No limit |
+
+## How It Works
+
+### History Folder Method
+
+1. Scans `~/Library/Application Support/Cursor/User/History/`
+2. Reads `entries.json` files to find your files
+3. Filters by directory path and timestamp range
+4. Selects the latest version of each file
+5. Restores files maintaining original directory structure
+
+### SQLite Database Method
+
+1. Connects to `state.vscdb` databases
+2. Queries `cursorDiskKV` table for chat conversations
+3. Extracts JSON data containing code snippets
+4. Parses messages for code blocks
+5. Saves extracted code to separate files
+
+## File Locations (macOS)
+
+| Description | Path |
+|-------------|------|
+| **History Folder** | `~/Library/Application Support/Cursor/User/History/` |
+| **Global Database** | `~/Library/Application Support/Cursor/User/globalStorage/state.vscdb` |
+| **Workspace Databases** | `~/Library/Application Support/Cursor/User/workspaceStorage/*/state.vscdb` |
+
+## Example Output
 
 ```
-Cursor History Restore Script
-==================================================
-History directory: C:\Users\YourName\AppData\Roaming\Cursor\User\History
-Restore path: C:/Users/YourName/Projects/MyProject/
+Cursor History Restore Script for macOS
+================================================================================
+History directory: /Users/name/Library/Application Support/Cursor/User/History
+Restore path: /Users/name/Projects/MyProject
 Output directory: restoredFolder
-Time range: 2024-07-31 22:42:22 to 2025-07-31 22:42:22
+Time range: 2024-12-05 10:30:00 to 2024-12-12 10:30:00
 
-Scanning history directory: C:\Users\YourName\AppData\Roaming\Cursor\User\History
-Looking for files from: C:/Users/YourName/Projects/MyProject/
-Time range: 2024-07-31 22:42:22 to 2025-07-31 22:42:22
-Found: src/main.py (from 2024-07-31 20:57:26.596000)
-Found: src/utils.py (from 2024-07-30 01:46:41.681000)
-Found: docs/readme.md (from 2024-07-31 01:10:04.441000)
-Found: config/settings.json (from 2024-07-31 20:57:25.985000)
-Found: tests/test_main.py (from 2024-07-31 20:57:26.489000)
-...
-Found: requirements.txt (from 2024-07-31 20:18:13.957000)
+Scanning history directory...
+Found: src/components/Button.tsx (from 2024-12-11 15:30:22)
+Found: src/utils/helpers.ts (from 2024-12-10 09:46:41)
+Found: README.md (from 2024-12-11 14:10:04)
+Found: package.json (from 2024-12-11 15:30:25)
 
-Processed 451 folders, found 25 matching files
+Processed 1,247 folders, found 42 matching files
 
 Restoring files to: restoredFolder
-Restored: src/main.py
-Restored: src/utils.py
-Restored: docs/readme.md
-...
-Restored: requirements.txt
+Restored: src/components/Button.tsx
+Restored: src/utils/helpers.ts
+Restored: README.md
+Restored: package.json
 
-Successfully restored 25 files
-
+Successfully restored 42 files
+================================================================================
 Restore complete!
+Total files restored: 42
 ```
+
+## Troubleshooting
+
+### No Files Found
+
+**Try expanding the time range:**
+```bash
+python3 cursor_restore_mac.py -r ~/Projects/MyProject/ -b 30
+```
+
+**Verify the exact path:**
+```bash
+cd ~/Projects/MyProject
+pwd  # Copy this exact path
+python3 cursor_restore_mac.py -r "$(pwd)"
+```
+
+**Try chat history extraction:**
+```bash
+python3 cursor_sqlite_explorer.py --extract-code --filter "filename.py"
+```
+
+### Permission Denied
+
+Grant Full Disk Access to Terminal:
+1. System Settings → Privacy & Security → Full Disk Access
+2. Add Terminal (or your terminal app)
+3. Restart terminal and try again
+
+### Database is Locked
+
+Close Cursor before accessing databases:
+```bash
+killall Cursor
+python3 cursor_sqlite_explorer.py --extract-code
+```
+
+### Finding Your Project Path
+
+```bash
+# Navigate to your project
+cd ~/Projects/MyProject
+
+# Get the absolute path
+pwd
+
+# Use the output with -r flag
+python3 cursor_restore_mac.py -r /Users/name/Projects/MyProject/
+```
+
+## Pro Tips
+
+1. **Start narrow, expand if needed**: Try 7 days first, then 30, then 90
+2. **Use absolute paths**: Get them with `pwd` in your project directory
+3. **Check multiple sources**: Try both History folder and chat extraction
+4. **Multiple attempts**: Different date ranges may yield different results
+5. **Backup restored files**: Review before reintegrating into your project
+
+## What Gets Restored
+
+- ✅ All file versions from History folder
+- ✅ Original directory structure maintained
+- ✅ Latest version within time range
+- ✅ All file types (code, config, documentation, etc.)
+- ✅ Code snippets from chat conversations (with SQLite explorer)
+
+## Safety & Privacy
+
+- **Read-only operations** - Original backups are never modified
+- **Local only** - No data sent to external servers
+- **You control** - You choose what to restore and where
+- **Non-destructive** - Restored files go to a separate directory
+
+## Recovery Strategy
+
+If files aren't in Cursor's history:
+
+1. **Time Machine**: macOS built-in backup
+2. **Git**: Check remote repositories (`git log --all`)
+3. **iCloud Drive**: If project was in iCloud
+4. **Cursor Backup DB**: Try `.backup` database files
+5. **Chat History**: Code might be in conversations
+
+## Requirements
+
+- Python 3.6 or higher
+- macOS (tested on macOS 10.15+)
+- Cursor editor installed with history/chat data
+
+## License
+
+See LICENSE file for details.
+
+## Disclaimer
+
+This tool is provided as-is for emergency file recovery. Always maintain regular backups using Git, Time Machine, or other backup solutions. Don't rely solely on Cursor's history for backup purposes.
 
 ---
 
-## 🎉 Happy Ending
+**Emergency Recovery Checklist:**
 
-Your files are back! Your code lives again! And now you have a new superpower: the ability to rescue your work from the digital abyss whenever Cursor decides to throw another tantrum.
-
-*May your commits be frequent and your backups be automatic.* 🙏
-
-**P.S.** - This script is like insurance for your sanity. You hope you'll never need it, but when you do, you'll be eternally grateful it exists.
+1. ✅ Don't panic
+2. ✅ Close Cursor to avoid further changes
+3. ✅ Run restore tool: `python3 cursor_restore_mac.py -r ~/Projects/MyProject/`
+4. ✅ Check restored files in `restoredFolder/`
+5. ✅ Try chat extraction if files missing: `python3 cursor_sqlite_explorer.py --extract-code`
+6. ✅ Expand time range if needed: add `-b 30` or `-b 90`
+7. ✅ Review and reintegrate recovered files
+8. ✅ Commit to Git immediately! 🙏
